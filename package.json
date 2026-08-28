@@ -1,0 +1,47 @@
+{
+  "name": "node-red-contrib-homematic-hcu",
+  "version": "1.1.0",
+  "description": "Node-RED nodes for access to Homematic HCU",
+  "keywords": [
+    "node-red",
+    "homematic",
+    "hcu",
+    "connect-api",
+    "websocket",
+    "eq-3"
+  ],
+  "author": {
+  "name": "Dieter Froning",
+  "email": "kontakt@homeitems.de"
+  },
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/homeitems/node-red-contrib-hcu#node-red-contrib-hcu"
+  },
+  "bugs": {
+  "url": "https://github.com/homeitems/node-red-contrib-hcu#node-red-contrib-hcu/issues"
+  },
+  "homepage": "https://github.com/homeitems/node-red-contrib-hcu#node-red-contrib-hcu#readme",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+  "node": ">=18.0.0"
+  },
+  "node-red": {
+    "version": ">=4.1.10",
+    "nodes": {
+      "hcu-config": "nodes/hcu-config.js",
+      "hcu-out": "nodes/hcu-out.js",
+      "hcu-in": "nodes/hcu-in.js",
+      "set-feature-value": "nodes/set-feature-value.js",
+      "get-feature-value": "nodes/get-feature-value.js",
+      "feature-event": "nodes/feature-event.js",
+      "create-user-message": "nodes/create-user-message.js",
+      "delete-user-message": "nodes/delete-user-message.js",
+      "new-hcu-connection": "nodes/new-hcu-connection.js"
+   
+    }
+  }
+}

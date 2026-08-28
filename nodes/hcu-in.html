@@ -1,0 +1,113 @@
+<script type="text/javascript">
+    RED.nodes.registerType("hcu-in", {
+        category: "Homematic IP HCU",
+        color: "#8EB4E3",
+        defaults: {
+            // Optional display name shown in the workspace
+            name: { value: "" },
+
+            // Reference to the shared HCU config node
+            connection: { value: "", type: "hcu-config", required: true },
+
+            // Event filter used to limit forwarded WebSocket messages
+            // - "all" forwards every received message
+            // - any other value matches against payload.type
+            eventFilter: { value: "all", required: true }
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "font-awesome/fa-arrow-circle-right",
+
+        // Static label shown in the palette
+        paletteLabel: "hcu in",
+
+        // Dynamic label shown on the workspace
+        label: function () {
+            return this.name || "hcu in";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="hcu-in">
+    <!-- Shared Homematic HCU config node selection -->
+    <div class="form-row">
+        <label for="node-input-connection">
+            <i class="fa fa-cog"></i> Connection
+        </label>
+        <input type="text" id="node-input-connection">
+    </div>
+
+    <!-- Predefined event filter dropdown -->
+    <div class="form-row">
+        <label for="node-input-eventFilter">
+            <i class="fa fa-filter"></i> Event filter
+        </label>
+        <select id="node-input-eventFilter" style="width: 70%;">
+            <option value="all">all</option>
+            <option value="CONFIG_TEMPLATE_REQUEST">CONFIG_TEMPLATE_REQUEST</option>
+            <option value="CONFIG_UPDATE_REQUEST">CONFIG_UPDATE_REQUEST</option>
+            <option value="CONTROL_REQUEST">CONTROL_REQUEST</option>
+            <option value="CREATE_USER_MESSAGE_RESPONSE">CREATE_USER_MESSAGE_RESPONSE</option>
+            <option value="DELETE_USER_MESSAGE_RESPONSE">DELETE_USER_MESSAGE_RESPONSE</option>
+            <option value="DISCOVER_REQUEST">DISCOVER_REQUEST</option>
+            <option value="ERROR_RESPONSE">ERROR_RESPONSE</option>
+            <option value="EXCLUSION_EVENT">EXCLUSION_EVENT</option>
+            <option value="HMIP_SYSTEM_EVENT">HMIP_SYSTEM_EVENT</option>
+            <option value="HMIP_SYSTEM_RESPONSE">HMIP_SYSTEM_RESPONSE</option>
+            <option value="INCLUSION_EVENT">INCLUSION_EVENT</option>
+            <option value="LIST_USER_MESSAGES_RESPONSE">LIST_USER_MESSAGES_RESPONSE</option>
+            <option value="PLUGIN_STATE_REQUEST">PLUGIN_STATE_REQUEST</option>
+            <option value="STATUS_REQUEST">STATUS_REQUEST</option>
+            <option value="SYSTEM_INFO_RESPONSE">SYSTEM_INFO_RESPONSE</option>
+            <option value="USER_MESSAGE_ACK_EVENT">USER_MESSAGE_ACK_EVENT</option>
+        </select>
+    </div>
+
+    <!-- Optional custom node name -->
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-input-name"
+            placeholder="Optional display name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="hcu-in">
+    <p>
+        Input node for receiving connection events and incoming WebSocket messages
+        from the shared Homematic HCU configuration node.
+    </p>
+
+    <h3>Configuration</h3>
+    <p>
+        <b>Connection</b> selects the associated <code>homematic-hcu-config</code> node.
+    </p>
+    <p>
+        <b>Event filter</b> controls which incoming WebSocket messages are forwarded.
+    </p>
+    <ul>
+        <li><code>all</code> forwards all received messages.</li>
+        <li>Any uppercase event type forwards only messages whose <code>payload.type</code> exactly matches the selected value.</li>
+    </ul>
+
+    <h3>Output</h3>
+    <p>
+        The node emits standard HCU messages on its single output.
+    </p>
+    <p>
+        For incoming WebSocket message has the HCU PluginMessage structure:
+    </p>
+
+
+    <p>
+        Connection events are also emitted only when <code>Event filter</code> is set to <code>all</code>.
+    </p>
+    <ul>
+        <li><code>connection/open</code></li>
+        <li><code>connection/close</code></li>
+        <li><code>connection/error</code></li>
+    </ul>
+</script>

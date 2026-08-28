@@ -1,0 +1,135 @@
+<script type="text/javascript">
+    RED.nodes.registerType("create-user-message", {
+        category: "Homematic IP HCU",
+        color: "#8EB4E3",
+        defaults: {
+            name: { value: "" },
+            connection: { value: "", type: "hcu-config", required: true },
+            messageCategory: { value: "INFO", required: true },
+            title: { value: "", required: true },
+            message: { value: "", required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-comment",
+        paletteLabel: "create user message",
+        label: function () {
+            return this.name || "create user message";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="create-user-message">
+    <div class="form-row">
+        <label for="node-input-connection">
+            <i class="fa fa-cog"></i> Connection
+        </label>
+        <input type="text" id="node-input-connection">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-messageCategory">
+            <i class="fa fa-flag"></i> Message category
+        </label>
+        <select id="node-input-messageCategory">
+            <option value="INFO">INFO</option>
+            <option value="ERROR">ERROR</option>
+            <option value="WARN">WARN</option>
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-title">
+            <i class="fa fa-header"></i> Title
+        </label>
+        <input
+            type="text"
+            id="node-input-title"
+            placeholder="Enter the message title">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-message">
+            <i class="fa fa-comment"></i> Message
+        </label>
+        <input
+            type="text"
+            id="node-input-message"
+            placeholder="Enter the message text">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-input-name"
+            placeholder="Optional display name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="create-user-message">
+    <p>
+        Sends a <code>CREATE_USER_MESSAGE_REQUEST</code> containing a
+        <code>PluginMessage</code> to the Homematic HCU.
+    </p>
+
+    <h3>Configuration</h3>
+    <p>
+        <b>Connection</b> selects the associated <code>homematic-hcu-config</code> node.
+    </p>
+    <p>
+        <b>Message category</b> can be set to <code>INFO</code>, <code>ERROR</code>, or <code>WARN</code>.
+        The default value is <code>INFO</code>.
+    </p>
+    <p>
+        <b>Title</b> and <b>Message</b> are entered once in the editor and are internally sent
+        as localized maps for <code>de</code> and <code>en</code> using the same text value.
+    </p>
+
+    <h3>Fixed values</h3>
+    <ul>
+        <li><code>behaviorType</code> is always set to <code>DISMISSIBLE</code>.</li>
+        <li><code>userMessageId</code> is generated automatically as a UUID for each request.</li>
+        <li><code>timestamp</code> defaults to the current system time.</li>
+    </ul>
+
+    <h3>Runtime overrides</h3>
+    <p>
+        The following incoming message properties can override the configured values:
+    </p>
+    <ul>
+        <li><code>msg.messageCategory</code></li>
+        <li><code>msg.title</code></li>
+        <li><code>msg.message</code></li>
+        <li><code>msg.timestamp</code></li>
+    </ul>
+
+    <h3>Generated request</h3>
+    <pre>{
+  "id": "generated-id",
+  "type": "CREATE_USER_MESSAGE_REQUEST",
+  "pluginId": "your-plugin-id",
+  "body": {
+    "userMessageId": "generated-uuid",
+    "behaviorType": "DISMISSIBLE",
+    "messageCategory": "INFO",
+    "timestamp": 1721210000000,
+    "title": {
+      "de": "Title text",
+      "en": "Title text"
+    },
+    "message": {
+      "de": "Message text",
+      "en": "Message text"
+    }
+  }
+}</pre>
+
+    <h3>Output</h3>
+    <p>
+        After successful sending, the input message is forwarded and
+        <code>msg.payload</code> is replaced with the generated <code>CREATE_USER_MESSAGE_REQUEST</code> object.
+    </p>
+</script>

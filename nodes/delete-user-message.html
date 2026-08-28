@@ -1,0 +1,87 @@
+<script type="text/javascript">
+    RED.nodes.registerType("delete-user-message", {
+        category: "Homematic IP HCU",
+        color: "#8EB4E3",
+        defaults: {
+            name: { value: "" },
+            connection: { value: "", type: "hcu-config", required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-trash",
+        paletteLabel: "delete user message",
+        label: function () {
+            return this.name || "delete user message";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="delete-user-message">
+    <div class="form-row">
+        <label for="node-input-connection">
+            <i class="fa fa-cog"></i> Connection
+        </label>
+        <input type="text" id="node-input-connection">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-input-name"
+            placeholder="Optional display name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="delete-user-message">
+    <p>
+        Sends a <code>DELETE_USER_MESSAGE_REQUEST</code> to the Homematic HCU.
+    </p>
+
+    <h3>Configuration</h3>
+    <p>
+        <b>Connection</b> selects the associated <code>homematic-hcu-config</code> node.
+    </p>
+
+    <h3>Input</h3>
+    <p>
+        The node expects the user message identifier in <code>msg.payload</code>.
+    </p>
+
+    <pre>{
+  "payload": "your-user-message-id"
+}</pre>
+
+    <h3>Outgoing request</h3>
+    <p>
+        The node creates a request with:
+    </p>
+    <ul>
+        <li><code>id</code> generated automatically, unless <code>msg.id</code> is provided.</li>
+        <li><code>type</code> fixed to <code>DELETE_USER_MESSAGE_REQUEST</code>.</li>
+        <li><code>pluginId</code> always taken from the config node.</li>
+        <li><code>body.userMessageId</code> taken from <code>msg.payload</code>.</li>
+    </ul>
+
+    <pre>{
+  "id": "generated-id",
+  "type": "DELETE_USER_MESSAGE_REQUEST",
+  "pluginId": "plugin-id-from-config-node",
+  "body": {
+    "userMessageId": "your-user-message-id"
+  }
+}</pre>
+
+    <h3>Output</h3>
+    <p>
+        After successful sending, the node forwards the message and replaces
+        <code>msg.payload</code> with the generated request object.
+    </p>
+    <p>
+    This node does not wait for or correlate a delete response.
+    Use the <code>hcu in</code> node with the
+    <code>DELETE_USER_MESSAGE_RESPONSE</code> filter if confirmation is required.
+    </p>
+</script>

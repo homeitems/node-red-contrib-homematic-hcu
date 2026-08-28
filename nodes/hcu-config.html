@@ -1,0 +1,105 @@
+<script type="text/javascript">
+    RED.nodes.registerType("hcu-config", {
+        category: "config",
+        defaults: {
+            name: { value: "" },
+            serverAddress: { value: "", required: true },
+            pluginId: { value: "", required: true },
+            allowSelfSigned: { value: false }
+        },
+        credentials: {
+            authToken: { type: "password", required: true }
+        },
+        label: function () {
+            return this.name || this.serverAddress || "homematic-hcu-config";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="hcu-config">
+    <div class="form-row">
+        <label for="node-config-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-config-input-name"
+            placeholder="Optional display name">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-serverAddress">
+            <i class="fa fa-globe"></i> Server address
+        </label>
+        <input
+            type="text"
+            id="node-config-input-serverAddress"
+            placeholder="192.168.1.20">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-pluginId">
+            <i class="fa fa-plug"></i> Plugin ID
+        </label>
+        <input
+            type="text"
+            id="node-config-input-pluginId"
+            placeholder="Enter plugin ID">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-authToken">
+            <i class="fa fa-lock"></i> Auth token
+        </label>
+        <input
+            type="password"
+            id="node-config-input-authToken"
+            placeholder="Enter auth token">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-allowSelfSigned" style="width:auto;">
+            <i class="fa fa-shield"></i> Allow self-signed certificates
+        </label>
+        <input
+            type="checkbox"
+            id="node-config-input-allowSelfSigned"
+            style="display:inline-block; width:auto; vertical-align:middle; margin-left:8px;">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="hcu-config">
+    <p>
+        Configuration node for a shared WebSocket connection to a Homematic HCU.
+    </p>
+
+    <p>
+        The node connects to <code>wss://&lt;serverAddress&gt;:9001</code> and sends the
+        required handshake headers:
+        <code>authtoken</code>, <code>plugin-id</code>, and
+        <code>hmip-system-events: true</code>.
+    </p>
+
+    <p>
+        After the connection is opened, the node automatically sends a
+        <code>PLUGIN_STATE_RESPONSE</code> with readiness state
+        <code>READY</code>. Incoming <code>PLUGIN_STATE_REQUEST</code> messages are answered automatically.
+    </p>
+
+    <p>
+        Enter only the host name or IP address in <b>Server address</b>,
+        for example <code>192.168.1.20</code>.
+    </p>
+    <h3>Security</h3>
+    <p>
+        The authentication token is stored as a Node-RED credential and is not
+        exported as a regular flow property.
+    </p>
+    <p>
+        Enable <code>Allow self-signed certificates</code> only when the HCU uses
+        a self-signed certificate in a controlled local environment.
+    </p>
+
+    <h3>Connection URL</h3>
+    <pre>wss://&lt;serverAddress&gt;:9001</pre>
+</script>

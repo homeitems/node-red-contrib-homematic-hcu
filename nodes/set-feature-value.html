@@ -1,0 +1,674 @@
+<script type="text/javascript">
+    RED.nodes.registerType("set-feature-value", {
+        // Category shown in the Node-RED palette
+        category: "Homematic IP HCU",
+
+        // Node color in the Node-RED palette
+        color: "#8EB4E3",
+
+        // Definition of editable node properties
+        defaults: {
+            // Optional display name
+            name: { value: "" },
+
+            // Reference to the shared Homematic HCU configuration node
+            connection: {
+                value: "",
+                type: "hcu-config",
+                required: true
+            },
+
+            // Selected device
+            // The device id is always stored as the selected value
+            device: {
+                value: "",
+                required: true
+            },
+
+            // Selected HMIP system request
+            hmipSystemRequest: {
+                value: "",
+                required: true
+            }
+        },
+
+        // The node has one input and one output
+        inputs: 1,
+        outputs: 1,
+
+        // Node icon
+        icon: "font-awesome/fa-pencil-square-o",
+
+        // Label shown in the Node-RED palette
+        paletteLabel: "set feature value",
+
+        // Label shown in the flow
+        label: function () {
+            return this.name || "set feature value";
+        },
+
+        /**
+         * Called when the edit dialog is opened.
+         *
+         * Tasks:
+         * - Load the device list
+         * - Restore the previously selected device id
+         * - Display the description of the selected HMIP system request
+         */
+        oneditprepare: function () {
+            const connectionField =
+                $("#node-input-connection");
+
+            const deviceField =
+                $("#node-input-device");
+
+            const hmipSystemRequestField =
+                $("#node-input-hmipSystemRequest");
+
+            const hmipSystemRequestDescriptionField =
+                $("#node-input-hmipSystemRequest-description");
+
+            // Previously stored device id of the node being edited
+            const savedDeviceValue = this.device || "";
+
+            /**
+             * Maps HMIP system request paths to their descriptions.
+             */
+            const hmipSystemRequestDescriptions = {
+                "/hmip/device/control/acknowledgeFrostProtectionError":
+                    "Acknowledges the frost protection error for a device channel.",
+
+                "/hmip/device/control/pullLatch":
+                    "Triggers the latch of a door opening device by activating the switching output of the target device channel for the configured duration.",
+
+                "/hmip/device/control/resetBlocking":
+                    "Sends a reset of the blockings for a device channel.",
+
+                "/hmip/device/control/resetEnergyCounter":
+                    "Resets the energy counter of the specified device.",
+
+                "/hmip/device/control/resetPassageCounter":
+                    "Resets the passage counter of the specified device.",
+
+                "/hmip/device/control/resetWaterVolume":
+                    "Resets the water volume counter of the specified device.",
+
+                "/hmip/device/control/sendDoorCommand":
+                    "Sends a door command to control a channel of a garage door device.",
+
+                "/hmip/device/control/setColorTemperatureDimLevel":
+                    "Sets the color temperature and dim level of a device channel.",
+
+                "/hmip/device/control/setColorTemperatureDimLevelWithTime":
+                    "Sets the color temperature and dim level for a specified period of time.",
+
+                "/hmip/device/control/setDimLevel":
+                    "Sets the dim level of a device channel.",
+
+                "/hmip/device/control/setDimLevelWithTime":
+                    "Sets the dim level for a specified period of time.",
+
+                "/hmip/device/control/setDoorLockActive":
+                    "Activates or deactivates the locking function of a door lock device.",
+
+                "/hmip/device/control/setDoorLockActiveWithAuthorization":
+                    "Activates or deactivates the locking function of a door lock device with authorization.",
+
+                "/hmip/device/control/setFavoriteShadingPosition":
+                    "Sets the favorite shading position.",
+
+                "/hmip/device/control/setHueSaturationDimLevel":
+                    "Sets hue, saturation and dim level.",
+
+                "/hmip/device/control/setHueSaturationDimLevelWithTime":
+                    "Sets hue, saturation and dim level for a specified period of time.",
+
+                "/hmip/device/control/setIdentify":
+                    "Activates or deactivates the identify function.",
+
+                "/hmip/device/control/setIdentifyOem":
+                    "Activates or deactivates the identify function of an OEM device.",
+
+                "/hmip/device/control/setLockState":
+                    "Locks, unlocks or opens a door lock device.",
+
+                "/hmip/device/control/setMotionDetectionActive":
+                    "Activates or deactivates motion detection.",
+
+                "/hmip/device/control/setOpticalSignal":
+                    "Sets the optical signal.",
+
+                "/hmip/device/control/setOpticalSignalWithTime":
+                    "Sets the optical signal for a specified period of time.",
+
+                "/hmip/device/control/setPrimaryShadingLevel":
+                    "Sets the primary shading level.",
+
+                "/hmip/device/control/setSecondaryShadingLevel":
+                    "Sets the secondary shading level.",
+
+                "/hmip/device/control/setShutterLevel":
+                    "Sets the shutter level.",
+
+                "/hmip/device/control/setSimpleRGBColorDimLevel":
+                    "Sets the RGB color and dim level.",
+
+                "/hmip/device/control/setSimpleRGBColorDimLevelWithTime":
+                    "Sets the RGB color and dim level for a specified period of time.",
+
+                "/hmip/device/control/setSlatsLevel":
+                    "Sets the slat level of a blind.",
+
+                "/hmip/device/control/setSoundFileVolumeLevel":
+                    "Sets the volume level of the sound file.",
+
+                "/hmip/device/control/setSoundFileVolumeLevelWithTime":
+                    "Sets the sound file volume level for a specified period of time.",
+
+                "/hmip/device/control/setSwitchState":
+                    "Sets the switch state.",
+
+                "/hmip/device/control/setSwitchStateForIdentify":
+                    "Sets the switch state for identify mode.",
+
+                "/hmip/device/control/setSwitchStateWithTime":
+                    "Sets the switch state for a specified period of time.",
+
+                "/hmip/device/control/setVentilationLevel":
+                    "Sets the ventilation level, for example for a fan.",
+
+                "/hmip/device/control/setVentilationLevelWithTime":
+                    "Sets the ventilation level for a specified period of time.",
+
+                "/hmip/device/control/setVentilationState":
+                    "Sets the ventilation state, for example for windows.",
+
+                "/hmip/device/control/setVentilationStateWithTime":
+                    "Sets the ventilation state for a specified period of time.",
+
+                "/hmip/device/control/setWateringSwitchState":
+                    "Sets the watering switch state.",
+
+                "/hmip/device/control/setWateringSwitchStateWithTime":
+                    "Sets the watering switch state for a specified period of time.",
+
+                "/hmip/device/control/startImpulse":
+                    "Sends a start impulse to a device channel.",
+
+                "/hmip/device/control/startLightScene":
+                    "Starts a light scene with a specified dim level.",
+
+                "/hmip/device/control/stop":
+                    "Stops a moving shutter, blind or ventilation device.",
+
+                "/hmip/device/control/toggleCameraNightVision":
+                    "Toggles the camera night vision mode.",
+
+                "/hmip/device/control/toggleGarageDoorState":
+                    "Toggles the garage door state.",
+
+                "/hmip/device/control/toggleShadingState":
+                    "Toggles the shading state.",
+
+                "/hmip/device/control/toggleSwitchState":
+                    "Toggles the switch state.",
+
+                "/hmip/device/control/toggleVentilationState":
+                    "Toggles the ventilation state.",
+
+                "/hmip/device/control/toggleWateringState":
+                    "Toggles the watering state."
+            };
+
+            /**
+             * Displays the description of the selected
+             * HMIP system request below the selection field.
+             */
+            function updateHmipSystemRequestDescription() {
+                const selectedValue =
+                    hmipSystemRequestField.val();
+
+                const description =
+                    hmipSystemRequestDescriptions[selectedValue] || "";
+
+                hmipSystemRequestDescriptionField.text(description);
+            }
+
+            /**
+             * Returns the value used to store the selected device.
+             *
+             * The selected device id is always used as the value.
+             *
+             * @param {object} device
+             * @returns {string}
+             */
+            function getDeviceSelectionValue(device) {
+                if (!device || typeof device !== "object") {
+                    return "";
+                }
+
+                return device.id || "";
+            }
+
+            /**
+             * Builds the visible label for a device entry.
+             *
+             * Rules:
+             * - Always show the device id first
+             * - Then show the device label
+             * - For PLUGIN_EXTERNAL devices, also show
+             *   pluginDeviceType and pluginDeviceId
+             * - For other devices, show only the device type
+             *
+             * Examples:
+             *
+             * Normal device:
+             * 3014F711A000123456789ABC | Living room light | SWITCH
+             *
+             * PLUGIN_EXTERNAL device:
+             * 001558A99D6106:1 | External device |
+             * SOME_PLUGIN_TYPE | my-plugin-device-id
+             *
+             * @param {object} device
+             * @returns {string}
+             */
+            function buildDeviceLabel(device) {
+                if (!device || typeof device !== "object") {
+                    return "(invalid device)";
+                }
+
+                const id = device.id || "(no id)";
+                const label = device.label || "(no label)";
+                const type =
+                    device.type ||
+                    device.deviceType ||
+                    "(no type)";
+
+                if (type === "PLUGIN_EXTERNAL") {
+                    const pluginDeviceType =
+                        device.pluginDeviceType ||
+                        "(no pluginDeviceType)";
+
+                    const pluginDeviceId =
+                        device.pluginDeviceId ||
+                        "(no pluginDeviceId)";
+
+                    return id +
+                        " | " +
+                        label +
+                        " | " +
+                        pluginDeviceType +
+                        " | " +
+                        pluginDeviceId;
+                }
+
+                return id + " | " + label + " | " + type;
+            }
+
+            /**
+             * Loads the device list for the selected connection
+             * and restores the previously selected device.
+             *
+             * @param {string} connectionId
+             * @param {string} selectedValue
+             */
+            function loadDevices(connectionId, selectedValue) {
+                // Clear the device selection before rebuilding it
+                deviceField.empty();
+
+                // Add the default selection option
+                deviceField.append(
+                    $("<option></option>")
+                        .val("")
+                        .text("Select a device")
+                );
+
+                // A device list cannot be loaded without a connection
+                if (!connectionId) {
+                    deviceField.val("");
+                    return;
+                }
+
+                $.getJSON(
+                    "homematic-hcu/" +
+                    connectionId +
+                    "/devices",
+                    function (devices) {
+                        let hasSelectedValue = false;
+                        const seenValues = new Set();
+
+                        (devices || []).forEach(function (device) {
+                            const value =
+                                getDeviceSelectionValue(device);
+
+                            // Ignore devices without a valid id
+                            if (!value) {
+                                return;
+                            }
+
+                            // Ignore duplicate device ids
+                            if (seenValues.has(value)) {
+                                return;
+                            }
+
+                            seenValues.add(value);
+
+                            const option = $("<option></option>")
+                                .val(value)
+                                .text(buildDeviceLabel(device));
+
+                            deviceField.append(option);
+
+                            // Restore the previous selection if it still exists
+                            if (
+                                selectedValue &&
+                                selectedValue === value
+                            ) {
+                                hasSelectedValue = true;
+                            }
+                        });
+
+                        // Restore the selected device if it is still available
+                        if (hasSelectedValue) {
+                            deviceField.val(selectedValue);
+                        } else {
+                            deviceField.val("");
+                        }
+
+                        // Trigger a change event for possible future logic
+                        deviceField.trigger("change");
+                    }
+                ).fail(function (jqXHR, textStatus) {
+                    console.error(
+                        "Failed to load devices:",
+                        textStatus,
+                        jqXHR.status,
+                        jqXHR.responseText
+                    );
+                });
+            }
+
+            // Remove old event handlers to avoid duplicate registrations
+            connectionField.off("change.set-feature-value");
+            hmipSystemRequestField.off(
+                "change.set-feature-value-description"
+            );
+
+            // Update the request description when the selection changes
+            hmipSystemRequestField.on(
+                "change.set-feature-value-description",
+                function () {
+                    updateHmipSystemRequestDescription();
+                }
+            );
+
+            // Display the request description immediately after opening
+            updateHmipSystemRequestDescription();
+
+            // Load the device list when the dialog is opened
+            loadDevices(
+                connectionField.val(),
+                savedDeviceValue
+            );
+
+            // Reload the device list when the connection changes
+            connectionField.on(
+                "change.set-feature-value",
+                function () {
+                    const newConnectionId = $(this).val();
+
+                    loadDevices(
+                        newConnectionId,
+                        deviceField.val() || savedDeviceValue
+                    );
+                }
+            );
+        },
+
+        /**
+         * Remove event handlers when the edit dialog is cancelled.
+         */
+        oneditcancel: function () {
+            $("#node-input-connection")
+                .off("change.set-feature-value");
+
+            $("#node-input-hmipSystemRequest")
+                .off("change.set-feature-value-description");
+        },
+
+        /**
+         * Remove event handlers when the edit dialog is saved.
+         */
+        oneditsave: function () {
+            $("#node-input-connection")
+                .off("change.set-feature-value");
+
+            $("#node-input-hmipSystemRequest")
+                .off("change.set-feature-value-description");
+        }
+    });
+</script>
+
+
+<script type="text/html" data-template-name="set-feature-value">
+    <!--
+        Edit dialog for the set-feature-value node.
+
+        Contains:
+        - Name
+        - Connection
+        - Device selection
+        - HMIP system request selection
+        - Description of the selected HMIP system request
+    -->
+
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-input-name"
+            placeholder="Optional display name">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-connection">
+            <i class="fa fa-plug"></i> Connection
+        </label>
+        <input
+            type="text"
+            id="node-input-connection">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-device">
+            <i class="fa fa-list"></i> Device
+        </label>
+
+        <!--
+            Dynamic device selection list.
+
+            Stored value:
+            - Always the device id
+
+            Visible label:
+            - id | label | type
+            - For PLUGIN_EXTERNAL devices:
+              id | label | pluginDeviceType | pluginDeviceId
+        -->
+        <select
+            id="node-input-device"
+            style="width: 70%;">
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-hmipSystemRequest">
+            <i class="fa fa-list"></i> HMIP system request
+        </label>
+
+        <!--
+            Required selection of the HMIP system request path.
+            Exactly one request must be selected.
+        -->
+        <select
+            id="node-input-hmipSystemRequest"
+            style="width: 70%;"
+            required>
+            <option value="">Select a request</option>
+
+            <option value="/hmip/device/control/acknowledgeFrostProtectionError">/hmip/device/control/acknowledgeFrostProtectionError</option>
+            <option value="/hmip/device/control/pullLatch">/hmip/device/control/pullLatch</option>
+            <option value="/hmip/device/control/resetBlocking">/hmip/device/control/resetBlocking</option>
+            <option value="/hmip/device/control/resetEnergyCounter">/hmip/device/control/resetEnergyCounter</option>
+            <option value="/hmip/device/control/resetPassageCounter">/hmip/device/control/resetPassageCounter</option>
+            <option value="/hmip/device/control/resetWaterVolume">/hmip/device/control/resetWaterVolume</option>
+            <option value="/hmip/device/control/sendDoorCommand">/hmip/device/control/sendDoorCommand</option>
+            <option value="/hmip/device/control/setColorTemperatureDimLevel">/hmip/device/control/setColorTemperatureDimLevel</option>
+            <option value="/hmip/device/control/setColorTemperatureDimLevelWithTime">/hmip/device/control/setColorTemperatureDimLevelWithTime</option>
+            <option value="/hmip/device/control/setDimLevel">/hmip/device/control/setDimLevel</option>
+            <option value="/hmip/device/control/setDimLevelWithTime">/hmip/device/control/setDimLevelWithTime</option>
+            <option value="/hmip/device/control/setDoorLockActive">/hmip/device/control/setDoorLockActive</option>
+            <option value="/hmip/device/control/setDoorLockActiveWithAuthorization">/hmip/device/control/setDoorLockActiveWithAuthorization</option>
+            <option value="/hmip/device/control/setFavoriteShadingPosition">/hmip/device/control/setFavoriteShadingPosition</option>
+            <option value="/hmip/device/control/setHueSaturationDimLevel">/hmip/device/control/setHueSaturationDimLevel</option>
+            <option value="/hmip/device/control/setHueSaturationDimLevelWithTime">/hmip/device/control/setHueSaturationDimLevelWithTime</option>
+            <option value="/hmip/device/control/setIdentify">/hmip/device/control/setIdentify</option>
+            <option value="/hmip/device/control/setIdentifyOem">/hmip/device/control/setIdentifyOem</option>
+            <option value="/hmip/device/control/setLockState">/hmip/device/control/setLockState</option>
+            <option value="/hmip/device/control/setMotionDetectionActive">/hmip/device/control/setMotionDetectionActive</option>
+            <option value="/hmip/device/control/setOpticalSignal">/hmip/device/control/setOpticalSignal</option>
+            <option value="/hmip/device/control/setOpticalSignalWithTime">/hmip/device/control/setOpticalSignalWithTime</option>
+            <option value="/hmip/device/control/setPrimaryShadingLevel">/hmip/device/control/setPrimaryShadingLevel</option>
+            <option value="/hmip/device/control/setSecondaryShadingLevel">/hmip/device/control/setSecondaryShadingLevel</option>
+            <option value="/hmip/device/control/setShutterLevel">/hmip/device/control/setShutterLevel</option>
+            <option value="/hmip/device/control/setSimpleRGBColorDimLevel">/hmip/device/control/setSimpleRGBColorDimLevel</option>
+            <option value="/hmip/device/control/setSimpleRGBColorDimLevelWithTime">/hmip/device/control/setSimpleRGBColorDimLevelWithTime</option>
+            <option value="/hmip/device/control/setSlatsLevel">/hmip/device/control/setSlatsLevel</option>
+            <option value="/hmip/device/control/setSoundFileVolumeLevel">/hmip/device/control/setSoundFileVolumeLevel</option>
+            <option value="/hmip/device/control/setSoundFileVolumeLevelWithTime">/hmip/device/control/setSoundFileVolumeLevelWithTime</option>
+            <option value="/hmip/device/control/setSwitchState">/hmip/device/control/setSwitchState</option>
+            <option value="/hmip/device/control/setSwitchStateForIdentify">/hmip/device/control/setSwitchStateForIdentify</option>
+            <option value="/hmip/device/control/setSwitchStateWithTime">/hmip/device/control/setSwitchStateWithTime</option>
+            <option value="/hmip/device/control/setVentilationLevel">/hmip/device/control/setVentilationLevel</option>
+            <option value="/hmip/device/control/setVentilationLevelWithTime">/hmip/device/control/setVentilationLevelWithTime</option>
+            <option value="/hmip/device/control/setVentilationState">/hmip/device/control/setVentilationState</option>
+            <option value="/hmip/device/control/setVentilationStateWithTime">/hmip/device/control/setVentilationStateWithTime</option>
+            <option value="/hmip/device/control/setWateringSwitchState">/hmip/device/control/setWateringSwitchState</option>
+            <option value="/hmip/device/control/setWateringSwitchStateWithTime">/hmip/device/control/setWateringSwitchStateWithTime</option>
+            <option value="/hmip/device/control/startImpulse">/hmip/device/control/startImpulse</option>
+            <option value="/hmip/device/control/startLightScene">/hmip/device/control/startLightScene</option>
+            <option value="/hmip/device/control/stop">/hmip/device/control/stop</option>
+            <option value="/hmip/device/control/toggleCameraNightVision">/hmip/device/control/toggleCameraNightVision</option>
+            <option value="/hmip/device/control/toggleGarageDoorState">/hmip/device/control/toggleGarageDoorState</option>
+            <option value="/hmip/device/control/toggleShadingState">/hmip/device/control/toggleShadingState</option>
+            <option value="/hmip/device/control/toggleSwitchState">/hmip/device/control/toggleSwitchState</option>
+            <option value="/hmip/device/control/toggleVentilationState">/hmip/device/control/toggleVentilationState</option>
+            <option value="/hmip/device/control/toggleWateringState">/hmip/device/control/toggleWateringState</option>
+        </select>
+    </div>
+
+    <div class="form-row">
+        <!--
+            Dynamic description of the selected HMIP system request.
+        -->
+        <div
+            id="node-input-hmipSystemRequest-description"
+            style="margin-left: 105px; width: 70%; color: #666; font-style: italic; line-height: 1.4;">
+        </div>
+    </div>
+</script>
+
+
+<script type="text/html" data-help-name="set-feature-value">
+    <p>
+        Builds and sends an HMIP system request using the selected
+        Homematic HCU connection and device.
+    </p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>
+            payload
+            <span class="property-type">
+                object | string | number | boolean
+            </span>
+        </dt>
+        <dd>
+            Used as the inner request body. If it is an object, its properties
+            are copied and extended with the selected <code>deviceId</code>.
+            If it is a primitive value, it is wrapped into an object together
+            with <code>deviceId</code>.
+        </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>
+            payload
+            <span class="property-type">object</span>
+        </dt>
+        <dd>
+            Contains the generated <code>HMIP_SYSTEM_REQUEST</code> object.
+            After a matching <code>HMIP_SYSTEM_RESPONSE</code> is received,
+            the response is attached as <code>msg.payload.response</code>.
+        </dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>
+        The device list is loaded dynamically from the selected Homematic HCU
+        connection.
+    </p>
+
+    <p>
+        The stored device value is always the device <code>id</code>.
+    </p>
+
+    <p>
+        The visible device label is formatted as follows:
+    </p>
+
+    <ul>
+        <li><code>id | label | type</code></li>
+        <li>
+            For <code>PLUGIN_EXTERNAL</code>:
+            <code>id | label | pluginDeviceType | pluginDeviceId</code>
+        </li>
+    </ul>
+
+    <p>
+        The HMIP system request must be selected from the list. A description
+        of the selected request is shown below the field.
+    </p>
+
+    <p>
+        The node sends the generated request over the existing WebSocket
+        connection of the selected configuration node.
+    </p>
+
+    <p>
+        It then waits for a matching <code>HMIP_SYSTEM_RESPONSE</code> with the
+        same request id and writes that response to
+        <code>msg.payload.response</code>.
+    </p>
+
+    <h3>Important</h3>
+
+    <p>
+        The node emits its output only after a matching
+        <code>HMIP_SYSTEM_RESPONSE</code> has been received.
+    </p>
+
+    <p>
+        If no response is received within 15 seconds, the node reports a
+        timeout and does not emit an output message.
+    </p>
+
+    <p>
+        The configured <code>device.id</code> is automatically added to the
+        request body as <code>deviceId</code>. If the input payload is an
+        object, its properties are merged with this value.
+    </p>
+</script>

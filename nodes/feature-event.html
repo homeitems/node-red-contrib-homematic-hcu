@@ -1,0 +1,259 @@
+<script type="text/javascript">
+    RED.nodes.registerType("feature-event", {
+        // Palette category and node appearance
+        category: "Homematic IP HCU",
+        color: "#8EB4E3",
+
+        // Editable node properties
+        defaults: {
+            name: { value: "" },
+            connection: {
+                value: "",
+                type: "hcu-config",
+                required: true
+            },
+            device: {
+                value: "",
+                required: true
+            },
+            feature: {
+                value: "",
+                required: true
+            }
+        },
+
+        inputs: 0,
+        outputs: 1,
+        icon: "font-awesome/fa-clock-o",
+        paletteLabel: "feature event",
+
+        label: function () {
+            return this.name || "feature event";
+        },
+
+        // Load and restore the device list when the edit dialog opens.
+        oneditprepare: function () {
+            const connectionField =
+                $("#node-input-connection");
+            const deviceField =
+                $("#node-input-device");
+            const savedDeviceValue = this.device || "";
+
+            function isPluginExternalDevice(device) {
+                return device &&
+                    typeof device === "object" &&
+                    device.type === "PLUGIN_EXTERNAL";
+            }
+
+            // The stored selection always uses device.id.
+            function getDeviceSelectionValue(device) {
+                if (!device || typeof device !== "object") {
+                    return "";
+                }
+
+                return device.id || "";
+            }
+
+            // Build the human-readable device label shown in the list.
+            function buildDeviceLabel(device) {
+                if (!device || typeof device !== "object") {
+                    return "(invalid device)";
+                }
+
+                const label = device.label || "(no label)";
+
+                if (isPluginExternalDevice(device)) {
+                    const pluginDeviceId =
+                        device.pluginDeviceId || "(no pluginDeviceId)";
+                    const pluginDeviceType =
+                        device.pluginDeviceType || "(no pluginDeviceType)";
+
+                    return pluginDeviceId +
+                        " | " +
+                        label +
+                        " | " +
+                        pluginDeviceType;
+                }
+
+                const id = device.id || "(no id)";
+                const deviceType =
+                    device.deviceType ||
+                    device.type ||
+                    "(no deviceType)";
+
+                return id + " | " + label + " | " + deviceType;
+            }
+
+            // Fetch devices for the selected connection and restore the
+            // previously selected device if it is still available.
+            function loadDevices(connectionId, selectedValue) {
+                deviceField.empty();
+                deviceField.append(
+                    $("<option></option>")
+                        .val("")
+                        .text("Select a device")
+                );
+
+                if (!connectionId) {
+                    deviceField.val("");
+                    return;
+                }
+
+                $.getJSON(
+                    "homematic-hcu/" +
+                    connectionId +
+                    "/devices",
+                    function (devices) {
+                        let hasSelectedValue = false;
+                        const seenValues = new Set();
+
+                        (devices || []).forEach(function (device) {
+                            const value =
+                                getDeviceSelectionValue(device);
+
+                            if (!value || seenValues.has(value)) {
+                                return;
+                            }
+
+                            seenValues.add(value);
+
+                            deviceField.append(
+                                $("<option></option>")
+                                    .val(value)
+                                    .text(buildDeviceLabel(device))
+                            );
+
+                            if (
+                                selectedValue &&
+                                selectedValue === value
+                            ) {
+                                hasSelectedValue = true;
+                            }
+                        });
+
+                        deviceField.val(
+                            hasSelectedValue ? selectedValue : ""
+                        );
+                        deviceField.trigger("change");
+                    }
+                ).fail(function (jqXHR, textStatus) {
+                    console.error(
+                        "Failed to load devices:",
+                        textStatus,
+                        jqXHR.status,
+                        jqXHR.responseText
+                    );
+                });
+            }
+
+            loadDevices(
+                connectionField.val(),
+                savedDeviceValue
+            );
+
+            // Avoid duplicate handlers when the dialog is reopened.
+            connectionField.off("change.feature-event");
+
+            connectionField.on(
+                "change.feature-event",
+                function () {
+                    const newConnectionId = $(this).val();
+                    loadDevices(
+                        newConnectionId,
+                        deviceField.val() || savedDeviceValue
+                    );
+                }
+            );
+        },
+
+        // Remove the connection handler when editing is cancelled.
+        oneditcancel: function () {
+            $("#node-input-connection")
+                .off("change.feature-event");
+        },
+
+        // Remove the connection handler after the node is saved.
+        oneditsave: function () {
+            $("#node-input-connection")
+                .off("change.feature-event");
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="feature-event">
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-input-name"
+            placeholder="Optional display name">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-connection">
+            <i class="fa fa-plug"></i> Connection
+        </label>
+        <input
+            type="text"
+            id="node-input-connection">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-device">
+            <i class="fa fa-list"></i> Device
+        </label>
+        <select
+            id="node-input-device"
+            style="width: 70%;">
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-feature">
+            <i class="fa fa-font"></i> Feature
+        </label>
+        <input
+            type="text"
+            id="node-input-feature"
+            placeholder="Required feature name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="feature-event">
+    <p>
+        Listens to Homematic HCU WebSocket events and emits a message when
+        the selected device changes and the configured feature exists.
+    </p>
+
+    <p>
+        The node stores and compares <code>device.id</code> for all device
+        types.
+    </p>
+
+    <p>
+        For devices with <code>type = PLUGIN_EXTERNAL</code>,
+        <code>pluginDeviceId</code> is shown as part of the display label,
+        but matching still uses <code>device.id</code>.
+    </p>
+
+    <p>
+        The selected device is preserved when the dialog is reopened and when
+        the flow is deployed, provided that the device still exists.
+    </p>
+
+    <p>
+        Duplicate device IDs are filtered before entries are added to the list.
+    </p>
+
+    <p>
+        The output payload contains <code>lastStatusUpdate</code>,
+        <code>label</code>, <code>feature</code> and <code>value</code>.
+    </p>
+
+    <p>
+        No output message is emitted when the selected device or feature is
+        not found.
+    </p>
+</script>

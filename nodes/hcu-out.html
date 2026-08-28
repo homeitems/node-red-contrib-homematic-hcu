@@ -1,0 +1,115 @@
+<script type="text/javascript">
+    RED.nodes.registerType("hcu-out", {
+        category: "Homematic IP HCU",
+        color: "#8EB4E3",
+        defaults: {
+            // Optional display name shown in the workspace
+            name: { value: "" },
+
+            // Reference to the shared Homematic HCU config node
+            connection: { value: "", type: "hcu-config", required: true },
+
+            // Fixed outgoing message type used for all messages sent by this node
+            messageType: { value: "HMIP_SYSTEM_REQUEST", required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-arrow-circle-right",
+        align: 'right',
+
+        // Static label shown in the palette
+        paletteLabel: "hcu out",
+
+        // Dynamic label shown on the workspace
+        label: function () {
+            return this.name || "hcu out";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="hcu-out">
+    <!-- Shared Homematic HCU config node selection -->
+    <div class="form-row">
+        <label for="node-input-connection">
+            <i class="fa fa-cog"></i> Connection
+        </label>
+        <input type="text" id="node-input-connection">
+    </div>
+
+    <!-- Predefined outgoing HCU message type selection -->
+    <div class="form-row">
+        <label for="node-input-messageType">
+            <i class="fa fa-tag"></i> Message type
+        </label>
+        <select id="node-input-messageType">
+            <option value="CONFIG_TEMPLATE_RESPONSE">CONFIG_TEMPLATE_RESPONSE</option>
+            <option value="CONFIG_UPDATE_RESPONSE">CONFIG_UPDATE_RESPONSE</option>
+            <option value="CONTROL_RESPONSE">CONTROL_RESPONSE</option>
+            <option value="CREATE_USER_MESSAGE_REQUEST">CREATE_USER_MESSAGE_REQUEST</option>
+            <option value="DELETE_USER_MESSAGE_REQUEST">DELETE_USER_MESSAGE_REQUEST</option>
+            <option value="DISCOVER_RESPONSE">DISCOVER_RESPONSE</option>
+            <option value="HMIP_SYSTEM_REQUEST">HMIP_SYSTEM_REQUEST</option>
+            <option value="LIST_USER_MESSAGES_REQUEST">LIST_USER_MESSAGES_REQUEST</option>
+            <option value="PLUGIN_STATE_RESPONSE">PLUGIN_STATE_RESPONSE</option>
+            <option value="STATUS_EVENT">STATUS_EVENT</option>
+            <option value="STATUS_RESPONSE">STATUS_RESPONSE</option>
+            <option value="SYSTEM_INFO_REQUEST">SYSTEM_INFO_REQUEST</option>
+        </select>
+    </div>
+
+    <!-- Optional custom node name -->
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input
+            type="text"
+            id="node-input-name"
+            placeholder="Optional display name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="hcu-out">
+    <p>
+        Output node for sending messages through the shared Homematic HCU
+        WebSocket connection.
+    </p>
+
+    <h3>Configuration</h3>
+    <p>
+        <b>Connection</b> selects the associated <code>homematic-hcu-config</code> node.
+    </p>
+    <p>
+        <b>Message type</b> is selected from the predefined HCU message types.
+        The default value is <code>HMIP_SYSTEM_REQUEST</code>.
+    </p>
+
+    <h3>Important behavior</h3>
+    <ul>
+        <li><code>msg.payload</code> is always sent as <code>body</code>.</li>
+        <li><code>pluginId</code> is always taken from the selected config node.</li>
+        <li><code>type</code> is always taken from the configured message type.</li>
+    </ul>
+
+    <h3>Outgoing structure</h3>
+    <pre>{
+  id: msg.id || generated id,
+  type: configured messageType,
+  pluginId: pluginId from config node,
+  body: msg.payload (from Input)
+}</pre>
+
+    <h3>Input</h3>
+    <p>
+        The node input need to be a JSon-Object corresponding to the selected messageType. (see the example for HMIP_SYSTEM_REQUEST)
+    </p>
+    <pre>{
+            "path": "/hmip/home/getSystemState",
+            "body": {}
+    }</pre>
+
+    <h3>Output</h3>
+    <p>
+        The input message is passed through unchanged after successful sending. Answer from HCU can be taken by the HCU in node. 
+    </p>
+</script>
