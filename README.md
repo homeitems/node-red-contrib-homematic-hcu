@@ -638,7 +638,7 @@ Install dependencies:
 npm install
 ```
 
-Install the package locally in Node-RED if you do not want to use the palette manager of node-red:
+Install the package locally in Node-RED:
 
 ```bash
 cd ~/.node-red
