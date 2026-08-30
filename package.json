@@ -19,12 +19,12 @@
   },
   "repository": {
   "type": "git",
-  "url": "https://github.com/homeitems/node-red-contrib-homematic-hcu#node-red-contrib-hcu"
+  "url": "https://github.com/homeitems/node-red-contrib-homematic-hcu#node-red-contrib-homematic-hcu"
   },
   "bugs": {
-  "url": "https://github.com/homeitems/node-red-contrib-homematic-hcu#node-red-contrib-hcu/issues"
+  "url": "https://github.com/homeitems/node-red-contrib-homematic-hcu#node-red-contrib-homematic-hcu/issues"
   },
-  "homepage": "https://github.com/homeitems/node-red-contrib-homematic-hcu#node-red-contrib-hcu#readme",
+  "homepage": "https://github.com/homeitems/node-red-contrib-homematic-hcu#node-red-contrib-homematic-hcu#readme",
   "license": "MIT",
   "dependencies": {
     "ws": "^8.18.0"
