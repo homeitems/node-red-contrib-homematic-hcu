@@ -129,10 +129,12 @@ module.exports = function (RED) {
                 }
             } catch (err) {
                 node.status({ fill: "red", shape: "ring", text: "send failed" });
-                node.error(err.message, msg);
-
+                // Report the error once: done(err) logs it and triggers Catch nodes.
+                // node.error() is only used as fallback if done is not available.
                 if (done) {
                     done(err);
+                } else {
+                    node.error(err.message, msg);
                 }
             }
         });

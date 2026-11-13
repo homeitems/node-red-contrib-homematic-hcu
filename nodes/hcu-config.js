@@ -776,6 +776,15 @@ module.exports = function (RED) {
                     }
 
 
+                    // Closing the node (deploy/shutdown) while the handshake
+                    // is still running makes ws emit "WebSocket was closed
+                    // before the connection was established". This is
+                    // intended and not an error.
+                    if (node.manualClose) {
+                        return;
+                    }
+
+
                     node.status({ fill: "red", shape: "ring", text: "error" });
                     node.error(`WebSocket error: ${err.message}`);
 

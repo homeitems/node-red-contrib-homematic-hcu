@@ -307,8 +307,13 @@ module.exports = function (RED) {
                     text: "request in progress"
                 });
 
-                node.error(error.message, msg);
-                done(error);
+                // Report the error once via done(err) (logs it and triggers
+                // Catch nodes); node.error() only as fallback.
+                if (done) {
+                    done(error);
+                } else {
+                    node.error(error.message, msg);
+                }
                 return;
             }
 
@@ -346,8 +351,8 @@ module.exports = function (RED) {
                     text: "connection failed"
                 });
 
-                node.error(error.message, msg);
-
+                // The error is forwarded as output message (documented
+                // behavior) and reported once via done(err).
                 send({
                     ...msg,
                     payload: {
@@ -355,7 +360,11 @@ module.exports = function (RED) {
                     }
                 });
 
-                done(error);
+                if (done) {
+                    done(error);
+                } else {
+                    node.error(error.message, msg);
+                }
             } finally {
                 node.busy = false;
             }
