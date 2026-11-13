@@ -455,6 +455,44 @@ module.exports = function (RED) {
 
 
         /**
+         * Reports an ERROR_RESPONSE from the HCU.
+         * The HCU sends this message when it could not process a message
+         * from the plugin. It is not correlated with a specific request;
+         * the error and the original message are written to the log and
+         * the debug sidebar so the user can see what was rejected.
+         *
+         * @param {object} payload ERROR_RESPONSE message
+         */
+        node.reportErrorResponse = function (payload) {
+            const body = payload.body || {};
+            const error = body.error || {};
+            const code = error.code || "UNKNOWN";
+            const message = error.message || "no error message";
+
+            let original = body.originalMessage;
+
+            if (original !== undefined && typeof original !== "string") {
+                try {
+                    original = JSON.stringify(original);
+                } catch (err) {
+                    original = String(original);
+                }
+            }
+
+            if (original === undefined || original === "") {
+                original = "not provided";
+            } else if (original.length > 1000) {
+                original = original.slice(0, 1000) + "… (truncated)";
+            }
+
+            node.error(
+                `HCU ERROR_RESPONSE (${code}): ${message} - ` +
+                `original message: ${original}`
+            );
+        };
+
+
+        /**
          * Schedules an automatic reconnect attempt.
          */
         node.scheduleReconnect = function () {
@@ -654,6 +692,15 @@ module.exports = function (RED) {
                             payload.type === "HMIP_SYSTEM_EVENT"
                         ) {
                             node.updateCachedDevicesFromSystemEvent(payload);
+                        }
+
+
+                        if (
+                            payload &&
+                            typeof payload === "object" &&
+                            payload.type === "ERROR_RESPONSE"
+                        ) {
+                            node.reportErrorResponse(payload);
                         }
 
 

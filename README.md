@@ -140,6 +140,7 @@ After the WebSocket opens, it:
 While connected, the node:
 
 - answers every `PLUGIN_STATE_REQUEST` from the HCU with `READY`.
+- reports every `ERROR_RESPONSE` from the HCU (sent when the HCU cannot process a message) as an error in the debug sidebar and the Node-RED log, including the error code, the error text and the original message (shortened to 1000 characters). The error is not assigned to a specific request.
 - replaces a device in the cache when a `DEVICE_CHANGED` event arrives. Other events (for example `DEVICE_ADDED`, `DEVICE_REMOVED` or `GROUP_CHANGED`) do not update the cache; new or removed devices are reflected after the next reconnect or redeploy.
 - mirrors the cache to the global context key `homematicHcu.systemState` (`{ timestamp, data }`), so it can be read in Function nodes.
 
@@ -641,6 +642,7 @@ No cached HCU system state available
 No devices found in cached HCU system state
 Timed out waiting for HMIP_SYSTEM_RESPONSE
 WebSocket handshake rejected: HTTP <status code>
+HCU ERROR_RESPONSE (<code>): <message> - original message: <message>
 ```
 
 ## Security
@@ -702,7 +704,7 @@ Check:
 
 - the WebSocket connection.
 - the selected request path.
-- whether the HCU returned an `ERROR_RESPONSE` (visible with `hcu in` and the filter `ERROR_RESPONSE`).
+- whether the HCU returned an `ERROR_RESPONSE` (shown as `HCU ERROR_RESPONSE …` in the debug sidebar, also available with `hcu in` and the filter `ERROR_RESPONSE`).
 - whether the HCU returned an `HMIP_SYSTEM_RESPONSE` with the same request ID.
 
 ### `set feature value` returns a code other than `200`
