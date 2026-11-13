@@ -144,7 +144,9 @@ While connected, the node:
 - replaces a device in the cache when a `DEVICE_CHANGED` event arrives. Other events (for example `DEVICE_ADDED`, `DEVICE_REMOVED` or `GROUP_CHANGED`) do not update the cache; new or removed devices are reflected after the next reconnect or redeploy.
 - mirrors the cache to the global context key `homematicHcu.systemState` (`{ timestamp, data }`), so it can be read in Function nodes.
 
-If the connection closes unexpectedly, the node schedules a reconnect after approximately five seconds. The connection is closed without reconnecting when Node-RED deploys or shuts down the node.
+If the connection closes unexpectedly or cannot be established (including a rejected handshake such as `HTTP 401`), the node retries automatically. The delay starts at 5 seconds and doubles after every failed attempt (5 s, 10 s, 20 s, …) up to 5 minutes. After a successful connection it is reset to 5 seconds. The node status shows the cause and the next attempt, for example `HTTP 401, retry in 20 s`.
+
+The connection is closed without reconnecting when Node-RED deploys or shuts down the node.
 
 ## New HCU connection
 
@@ -615,6 +617,7 @@ connecting...
 connected
 disconnected (<code>)
 HTTP <status code>
+<cause>, retry in <n> s
 not connected
 waiting for events
 listening
@@ -671,7 +674,7 @@ Check:
 
 ### The node shows `HTTP 401` or `HTTP 403`
 
-The HCU rejected the token or the plugin ID. The node does not retry automatically in this case. Check both values and redeploy.
+The HCU rejected the token or the plugin ID. The node keeps retrying with an increasing delay (up to 5 minutes), but the connection will not succeed until the values are corrected. Check both values and redeploy; the delay starts again at 5 seconds.
 
 ### The device list is empty
 

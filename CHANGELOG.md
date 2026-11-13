@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `set feature value`: if sending the request failed, the 15-second timeout was not cancelled and reported a second error for the same message. The pending request is now removed immediately.
 - `set feature value`: responses with a code other than `200` were reported as success. The node now shows a red status with the error code (for example `400: INVALID_REQUEST`) and reports an error that can be handled with a Catch node. The output message is still emitted as before.
+- Connection: after the HCU rejected the WebSocket handshake with an HTTP error (for example `401` for an invalid token), the node never tried to connect again and the request stayed open. The handshake is now aborted and a reconnect is scheduled.
 
 ### Changed
 
+- Connection: the reconnect delay now increases after every failed attempt (5 s, 10 s, 20 s, … up to 5 minutes) instead of a fixed 5 seconds, and is reset after a successful connection. The node status shows the cause and the next attempt (for example `HTTP 401, retry in 20 s`).
 - README aligned with the current implementation and the Homematic IP Connect API documentation (v1.0.1):
   - `set feature value` returns the HCU response in `msg.payload.response` (previously documented as `respond`).
   - The `set feature value` example now includes the required `channelIndex`.
