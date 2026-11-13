@@ -28,7 +28,8 @@
   "license": "MIT",
   "files": [
     "nodes/",
-    "examples/"
+    "examples/",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "ws": "^8.18.0"
