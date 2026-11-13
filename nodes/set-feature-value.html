@@ -662,6 +662,14 @@
     </p>
 
     <p>
+        If the response code is not <code>200</code>, the HCU rejected the
+        request. The output is still emitted, but the node shows a red status
+        with the error code (for example <code>400: INVALID_REQUEST</code>) and
+        reports an error that can be handled with a Catch node. The reason is
+        available in <code>msg.payload.response.body.body.errorCode</code>.
+    </p>
+
+    <p>
         If no response is received within 15 seconds, the node reports a
         timeout and does not emit an output message.
     </p>

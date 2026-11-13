@@ -135,14 +135,42 @@ module.exports = function (RED) {
             // Attach the response to the generated request in msg.payload.
             pending.msg.payload.response = response;
 
+            const responseBody = response.body || {};
+            const code = responseBody.code;
+
+            if (code === 200) {
+                node.status({
+                    fill: "green",
+                    shape: "dot",
+                    text: "response received"
+                });
+
+                pending.send(pending.msg);
+                pending.done();
+                return;
+            }
+
+            // The HCU rejected the request. The message is still forwarded so
+            // the flow can inspect the response, and the error is reported via
+            // done(err) so it can be handled with a Catch node.
+            const errorCode =
+                responseBody.body && responseBody.body.errorCode
+                    ? responseBody.body.errorCode
+                    : "UNKNOWN_ERROR";
+
             node.status({
-                fill: "green",
-                shape: "dot",
-                text: "response received"
+                fill: "red",
+                shape: "ring",
+                text: `${code !== undefined ? code : "no code"}: ${errorCode}`
             });
 
             pending.send(pending.msg);
-            pending.done();
+            pending.done(
+                new Error(
+                    `HCU rejected ${node.hmipSystemRequest}: ` +
+                    `code ${code !== undefined ? code : "missing"}, ${errorCode}`
+                )
+            );
         }
 
         if (typeof node.server.registerListener !== "function") {

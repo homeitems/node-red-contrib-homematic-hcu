@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `set feature value`: if sending the request failed, the 15-second timeout was not cancelled and reported a second error for the same message. The pending request is now removed immediately.
+- `set feature value`: responses with a code other than `200` were reported as success. The node now shows a red status with the error code (for example `400: INVALID_REQUEST`) and reports an error that can be handled with a Catch node. The output message is still emitted as before.
 
 ### Changed
 
