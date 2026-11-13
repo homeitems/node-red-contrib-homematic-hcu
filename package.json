@@ -26,6 +26,10 @@
   },
   "homepage": "https://github.com/homeitems/node-red-contrib-homematic-hcu#readme",
   "license": "MIT",
+  "files": [
+    "nodes/",
+    "examples/"
+  ],
   "dependencies": {
     "ws": "^8.18.0"
   },
