@@ -481,7 +481,7 @@ Example of a successful response:
 }
 ```
 
-The output is also emitted when the HCU rejects the request. In that case `msg.payload.response.body.code` is not `200` and `msg.payload.response.body.body.errorCode` contains the reason (for example `INVALID_REQUEST`, `UNKNOWN_DEVICE` or `FEATURE_NOT_SUPPORTED`). Check the code in your flow, for example with a Switch node.
+The output is also emitted when the HCU rejects the request. In that case `msg.payload.response.body.code` is not `200` and `msg.payload.response.body.body.errorCode` contains the reason (for example `INVALID_REQUEST`, `UNKNOWN_DEVICE` or `FEATURE_NOT_SUPPORTED`). The node additionally shows a red status with code and error code (for example `400: INVALID_REQUEST`) and reports an error that can be handled with a Catch node.
 
 The timeout is 15 seconds. If no matching response arrives, the node reports an error and emits no output.
 
