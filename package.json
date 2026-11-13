@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-homematic-hcu",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Node-RED nodes for access to Homematic IP HCU (Home Control Unit)",
   "keywords": [
     "node-red",
@@ -14,15 +14,15 @@
     "eq-3"
   ],
   "author": {
-  "name": "Dieter Froning",
-  "email": "kontakt@homeitems.de"
+    "name": "Dieter Froning",
+    "email": "kontakt@homeitems.de"
   },
   "repository": {
-  "type": "git",
-  "url": "git+https://github.com/homeitems/node-red-contrib-homematic-hcu.git"
+    "type": "git",
+    "url": "git+https://github.com/homeitems/node-red-contrib-homematic-hcu.git"
   },
   "bugs": {
-  "url": "https://github.com/homeitems/node-red-contrib-homematic-hcu/issues"
+    "url": "https://github.com/homeitems/node-red-contrib-homematic-hcu/issues"
   },
   "homepage": "https://github.com/homeitems/node-red-contrib-homematic-hcu#readme",
   "license": "MIT",
@@ -35,7 +35,7 @@
     "ws": "^8.18.0"
   },
   "engines": {
-  "node": ">=18.0.0"
+    "node": ">=18.0.0"
   },
   "node-red": {
     "version": ">=4.1.10",
@@ -49,7 +49,6 @@
       "create-user-message": "nodes/create-user-message.js",
       "delete-user-message": "nodes/delete-user-message.js",
       "new-hcu-connection": "nodes/new-hcu-connection.js"
-   
     }
   }
 }
