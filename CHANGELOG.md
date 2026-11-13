@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `set feature value`: if sending the request failed, the 15-second timeout was not cancelled and reported a second error for the same message. The pending request is now removed immediately.
 - `set feature value`: responses with a code other than `200` were reported as success. The node now shows a red status with the error code (for example `400: INVALID_REQUEST`) and reports an error that can be handled with a Catch node. The output message is still emitted as before.
 - Connection: after the HCU rejected the WebSocket handshake with an HTTP error (for example `401` for an invalid token), the node never tried to connect again and the request stayed open. The handshake is now aborted and a reconnect is scheduled.
+- Errors in `create user message`, `delete user message`, `hcu out`, `set feature value` and `New HCU connection` were logged twice (once by the node and once by Node-RED). Each error is now reported exactly once and can still be handled with a Catch node.
+- Connection: deploying while the connection was still being established logged the error "WebSocket was closed before the connection was established". This intended close is no longer reported as an error.
 
 ### Changed
 
