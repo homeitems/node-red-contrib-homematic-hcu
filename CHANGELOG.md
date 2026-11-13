@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ERROR_RESPONSE` messages from the HCU (sent when it cannot process a message) are now reported in the debug sidebar and the Node-RED log, including error code, error text and the original message. Previously they were only visible with an `hcu in` node.
 
+### Security
+
+- The admin endpoint `/homematic-hcu/<connectionId>/devices`, which provides the device list for the editor, is now protected with the Node-RED permission `hcu-config.read`. With `adminAuth` enabled, it previously returned the cached device list (names, rooms, states) without login. Logged-in users with `read` or `*` permission are not affected; without `adminAuth` nothing changes.
+
 ### Fixed
 
 - `set feature value`: if sending the request failed, the 15-second timeout was not cancelled and reported a second error for the same message. The pending request is now removed immediately.

@@ -913,37 +913,45 @@ module.exports = function (RED) {
     /**
      * Admin endpoint used by editor dialogs to load devices
      * from the shared config node cache.
+     *
+     * Protected with RED.auth.needsPermission: if adminAuth is enabled in
+     * the Node-RED settings, only logged-in users with read permission get
+     * the device list. Without adminAuth the check has no effect.
      */
-    RED.httpAdmin.get("/homematic-hcu/:id/devices", function (req, res) {
-        const configNode = RED.nodes.getNode(req.params.id);
+    RED.httpAdmin.get(
+        "/homematic-hcu/:id/devices",
+        RED.auth.needsPermission("hcu-config.read"),
+        function (req, res) {
+            const configNode = RED.nodes.getNode(req.params.id);
 
 
-        if (!configNode || typeof configNode.getSystemState !== "function") {
+            if (!configNode || typeof configNode.getSystemState !== "function") {
+                return res.json([]);
+            }
+
+
+            const cache = configNode.getSystemState();
+
+
+            if (!cache || !cache.data || !cache.data.devices) {
+                return res.json([]);
+            }
+
+
+            const devices = cache.data.devices;
+
+
+            if (Array.isArray(devices)) {
+                return res.json(devices);
+            }
+
+
+            if (typeof devices === "object") {
+                return res.json(Object.values(devices));
+            }
+
+
             return res.json([]);
         }
-
-
-        const cache = configNode.getSystemState();
-
-
-        if (!cache || !cache.data || !cache.data.devices) {
-            return res.json([]);
-        }
-
-
-        const devices = cache.data.devices;
-
-
-        if (Array.isArray(devices)) {
-            return res.json(devices);
-        }
-
-
-        if (typeof devices === "object") {
-            return res.json(Object.values(devices));
-        }
-
-
-        return res.json([]);
-    });
+    );
 };

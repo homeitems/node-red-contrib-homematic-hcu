@@ -650,7 +650,8 @@ HCU ERROR_RESPONSE (<code>): <message> - original message: <message>
 
 ## Security
 
-- Protect the Node-RED editor and runtime.
+- Protect the Node-RED editor and runtime with a login (`adminAuth` in the Node-RED `settings.js`).
+- The device list for the editor is provided by the admin endpoint `/homematic-hcu/<connectionId>/devices`. If `adminAuth` is enabled, it is only available to logged-in users with read permission (`hcu-config.read`, included in `read` and `*`). Without `adminAuth`, it is accessible like the rest of the editor.
 - Treat HCU authentication tokens and activation keys as secrets.
 - Do not place real tokens in README files, screenshots, examples, issue reports, or exported flows.
 - Avoid connecting authentication output directly to Debug nodes in production.
@@ -690,7 +691,7 @@ Check that:
 - the WebSocket connection is open.
 - the initial system state has been received.
 - the system state contains a `devices` array or object map.
-- the Node-RED editor can access the admin endpoint.
+- the Node-RED editor can access the admin endpoint. If `adminAuth` is enabled, the logged-in user needs read permission.
 
 ### `get feature value` produces no message
 
