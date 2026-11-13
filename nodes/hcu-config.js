@@ -2,6 +2,11 @@ module.exports = function (RED) {
     const WebSocket = require("ws");
     const crypto = require("crypto");
 
+    // Reconnect delay: starts at 5 s, doubles after every failed attempt,
+    // capped at 5 min, reset after a successful connection.
+    const RECONNECT_DELAY_MIN = 5000;
+    const RECONNECT_DELAY_MAX = 300000;
+
 
     /**
      * Configuration node for a shared WebSocket connection
@@ -50,6 +55,12 @@ module.exports = function (RED) {
         node.connecting = false;
         node.manualClose = false;
         node.reconnectTimer = null;
+        node.reconnectDelay = RECONNECT_DELAY_MIN;
+
+        // Set when the HCU rejects the WebSocket handshake with an HTTP
+        // status (e.g. "HTTP 401"); used for status text and to avoid
+        // logging the same failure twice.
+        node.handshakeError = null;
 
 
         // Registered listeners from dependent nodes
@@ -494,17 +505,31 @@ module.exports = function (RED) {
 
         /**
          * Schedules an automatic reconnect attempt.
+         * The delay doubles after every attempt (5 s, 10 s, 20 s, ...)
+         * up to 5 minutes and is reset after a successful connection.
+         *
+         * @returns {number|null} delay in milliseconds, or null if no
+         *     reconnect was scheduled
          */
         node.scheduleReconnect = function () {
             if (node.manualClose || node.reconnectTimer) {
-                return;
+                return null;
             }
+
+
+            const delay = node.reconnectDelay;
 
 
             node.reconnectTimer = setTimeout(() => {
                 node.reconnectTimer = null;
                 node.connect();
-            }, 5000);
+            }, delay);
+
+
+            node.reconnectDelay = Math.min(delay * 2, RECONNECT_DELAY_MAX);
+
+
+            return delay;
         };
 
 
@@ -540,6 +565,7 @@ module.exports = function (RED) {
 
             node.connecting = true;
             node.manualClose = false;
+            node.handshakeError = null;
 
 
             node.status({
@@ -561,6 +587,7 @@ module.exports = function (RED) {
                 node.ws.on("open", () => {
                     node.connecting = false;
                     node.connected = true;
+                    node.reconnectDelay = RECONNECT_DELAY_MIN;
 
 
                     node.status({
@@ -596,20 +623,29 @@ module.exports = function (RED) {
 
                 /**
                  * Fired when the endpoint responds with plain HTTP
-                 * instead of switching to a WebSocket connection.
+                 * instead of switching to a WebSocket connection
+                 * (e.g. 401 for an invalid auth token).
+                 *
+                 * Because this listener exists, ws does not abort the
+                 * handshake by itself. The response is drained and the
+                 * socket is terminated, which makes ws emit "error" and
+                 * "close"; the close handler then schedules a reconnect.
                  */
-                node.ws.on("unexpected-response", (req, res) => {
+                const ws = node.ws;
+
+                ws.on("unexpected-response", (req, res) => {
                     node.connecting = false;
                     node.connected = false;
 
 
                     const statusCode = res.statusCode;
+                    node.handshakeError = `HTTP ${statusCode}`;
 
 
                     node.status({
                         fill: "red",
                         shape: "ring",
-                        text: `HTTP ${statusCode}`
+                        text: node.handshakeError
                     });
 
 
@@ -620,6 +656,11 @@ module.exports = function (RED) {
                         type: "error",
                         error: `HTTP ${statusCode} during WebSocket handshake`
                     });
+
+
+                    // Discard the response body and abort the handshake.
+                    res.resume();
+                    ws.terminate();
                 });
 
 
@@ -727,6 +768,14 @@ module.exports = function (RED) {
                     node.connected = false;
 
 
+                    // A rejected handshake was already reported by the
+                    // "unexpected-response" handler; the error that ws emits
+                    // after terminate() would only duplicate it.
+                    if (node.handshakeError) {
+                        return;
+                    }
+
+
                     node.status({ fill: "red", shape: "ring", text: "error" });
                     node.error(`WebSocket error: ${err.message}`);
 
@@ -750,12 +799,13 @@ module.exports = function (RED) {
 
 
                     const reasonText = reason ? reason.toString() : "";
+                    const cause = node.handshakeError || `disconnected (${code})`;
 
 
                     node.status({
-                        fill: "grey",
+                        fill: node.handshakeError ? "red" : "grey",
                         shape: "ring",
-                        text: `disconnected (${code})`
+                        text: cause
                     });
 
 
@@ -767,7 +817,15 @@ module.exports = function (RED) {
 
 
                     if (!node.manualClose) {
-                        node.scheduleReconnect();
+                        const delay = node.scheduleReconnect();
+
+                        if (delay !== null) {
+                            node.status({
+                                fill: node.handshakeError ? "red" : "grey",
+                                shape: "ring",
+                                text: `${cause}, retry in ${Math.round(delay / 1000)} s`
+                            });
+                        }
                     }
                 });
             } catch (err) {
