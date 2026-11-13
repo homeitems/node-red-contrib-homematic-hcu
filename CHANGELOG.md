@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `New HCU connection`: the server address now also accepts host names such as `hcu1-1234.local` (the default host name of the HCU), not only IPv4 addresses. The check in the editor and at runtime is identical; protocol, port or path are rejected.
 - Connection: the reconnect delay now increases after every failed attempt (5 s, 10 s, 20 s, … up to 5 minutes) instead of a fixed 5 seconds, and is reset after a successful connection. The node status shows the cause and the next attempt (for example `HTTP 401, retry in 20 s`).
 - README aligned with the current implementation and the Homematic IP Connect API documentation (v1.0.1):
   - `set feature value` returns the HCU response in `msg.payload.response` (previously documented as `respond`).
