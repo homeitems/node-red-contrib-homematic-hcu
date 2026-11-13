@@ -466,6 +466,31 @@ module.exports = function (RED) {
 
 
         /**
+         * Answers a CONFIG_TEMPLATE_REQUEST with an empty template.
+         * The HCU sends this request when the plugin configuration is
+         * opened in HCUweb. The plugin has no configuration parameters
+         * there (everything is configured in Node-RED), so the Connect API
+         * documentation recommends an empty template. The response must
+         * use the message ID of the request.
+         *
+         * @param {string} messageId
+         */
+        node.sendEmptyConfigTemplate = function (messageId) {
+            const response = {
+                id: messageId || crypto.randomUUID(),
+                pluginId: node.pluginId,
+                type: "CONFIG_TEMPLATE_RESPONSE",
+                body: {
+                    properties: {}
+                }
+            };
+
+
+            node.sendMessage(response);
+        };
+
+
+        /**
          * Reports an ERROR_RESPONSE from the HCU.
          * The HCU sends this message when it could not process a message
          * from the plugin. It is not correlated with a specific request;
@@ -701,6 +726,21 @@ module.exports = function (RED) {
                             } catch (err) {
                                 node.error(
                                     `Failed to answer PLUGIN_STATE_REQUEST: ${err.message}`
+                                );
+                            }
+                        }
+
+
+                        if (
+                            payload &&
+                            typeof payload === "object" &&
+                            payload.type === "CONFIG_TEMPLATE_REQUEST"
+                        ) {
+                            try {
+                                node.sendEmptyConfigTemplate(payload.id);
+                            } catch (err) {
+                                node.error(
+                                    `Failed to answer CONFIG_TEMPLATE_REQUEST: ${err.message}`
                                 );
                             }
                         }
