@@ -170,6 +170,9 @@ module.exports = function (RED) {
                 node.send.apply(node, arguments);
             };
 
+            // Set once the request has been built; used for cleanup on error.
+            let requestId = null;
+
             try {
                 if (!node.server) {
                     node.status({
@@ -202,7 +205,9 @@ module.exports = function (RED) {
                     );
                 }
 
-                const { requestId, requestObject } = buildRequest(msg);
+                const built = buildRequest(msg);
+                const requestObject = built.requestObject;
+                requestId = built.requestId;
                 msg.payload = requestObject;
 
                 const timeout = setTimeout(function () {
@@ -241,6 +246,18 @@ module.exports = function (RED) {
                     text: "waiting for response"
                 });
             } catch (err) {
+                // If the request was already registered (e.g. sendMessage()
+                // threw), remove it again so its timeout cannot call done()
+                // a second time.
+                const pending = requestId
+                    ? node.pendingRequests.get(requestId)
+                    : null;
+
+                if (pending) {
+                    clearTimeout(pending.timeout);
+                    node.pendingRequests.delete(requestId);
+                }
+
                 node.status({
                     fill: "red",
                     shape: "ring",
