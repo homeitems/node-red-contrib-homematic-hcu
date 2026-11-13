@@ -1,5 +1,35 @@
 const https = require("https");
 
+const IPV4_PATTERN =
+    /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
+
+// Host name per RFC 1123: labels of 1-63 letters, digits or hyphens,
+// not starting or ending with a hyphen, total length up to 253 characters.
+const HOSTNAME_PATTERN =
+    /^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/;
+
+/**
+ * Returns true if the value is an IPv4 address or a host name
+ * (e.g. "192.168.1.20" or "hcu1-1234.local").
+ * Values consisting only of digits and dots must be valid IPv4 addresses,
+ * so that e.g. "192.168.1.999" is rejected instead of treated as host name.
+ * Protocol, port and path are not allowed.
+ *
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isValidServerAddress(value) {
+    if (typeof value !== "string" || !value) {
+        return false;
+    }
+
+    if (/^[\d.]+$/.test(value)) {
+        return IPV4_PATTERN.test(value);
+    }
+
+    return HOSTNAME_PATTERN.test(value);
+}
+
 module.exports = function (RED) {
     /**
      * Creates and confirms a HomematicIP HCU Connect API authentication token.
@@ -98,8 +128,6 @@ module.exports = function (RED) {
          * Validates the node configuration.
          */
         function validateConfiguration() {
-            const ipv4Pattern =
-                /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
 
             if (!node.pluginIdentifier) {
                 throw new Error("Plugin identifier is required");
@@ -126,9 +154,10 @@ module.exports = function (RED) {
                 throw new Error("Activation key is required");
             }
 
-            if (!ipv4Pattern.test(node.serverAddress)) {
+            if (!isValidServerAddress(node.serverAddress)) {
                 throw new Error(
-                    "Server adress must be a valid IPv4 address"
+                    "Server address must be an IPv4 address or a host name " +
+                    "(e.g. hcu1-1234.local) without protocol or port"
                 );
             }
         }

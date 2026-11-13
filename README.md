@@ -159,7 +159,7 @@ Any incoming message starts the process. The node sends two HTTPS requests to po
 - `Plugin identifier`: Your plugin identifier. Reverse domain notation is recommended, for example `de.doe.jane.plugin.example`.
 - `Plugin Name`: JSON language map containing at least a non-empty `de` value. It is shown in HCUweb and in the Homematic IP app.
 - `Activation key`: One-time key generated on the developer mode page of HCUweb. It expires after a certain period.
-- `Server address`: HCU IPv4 address (host names are not accepted by this node).
+- `Server address`: IPv4 address or host name of the HCU (for example `192.168.1.20` or `hcu1-1234.local`), without protocol or port.
 - `Allow self-signed certificate`: Disables TLS certificate verification for these HTTPS requests.
 
 Example plugin name:

@@ -41,15 +41,27 @@
                 validate: RED.validators.regex(/\S/)
             },
 
-            // IPv4 address of the HCU
+            // IPv4 address or host name of the HCU (e.g. hcu1-1234.local).
+            // Same rules as isValidServerAddress() in new-hcu-connection.js.
             serverAddress: {
                 value: "",
                 required: true,
                 validate: function (value) {
+                    const v = String(value || "").trim();
                     const ipv4Pattern =
                         /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
+                    const hostnamePattern =
+                        /^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/;
 
-                    return ipv4Pattern.test(value.trim());
+                    if (!v) {
+                        return false;
+                    }
+
+                    if (/^[\d.]+$/.test(v)) {
+                        return ipv4Pattern.test(v);
+                    }
+
+                    return hostnamePattern.test(v);
                 }
             },
 
@@ -142,7 +154,7 @@
     </div>
 
 
-    <!-- IPv4 address of the HCU -->
+    <!-- IPv4 address or host name of the HCU -->
     <div class="form-row">
         <label for="node-input-serverAddress">
             <i class="fa fa-server"></i> Server address
@@ -151,11 +163,13 @@
         <input
             type="text"
             id="node-input-serverAddress"
-            placeholder="192.168.1.100">
+            placeholder="192.168.1.100 or hcu1-1234.local">
     </div>
 
     <div class="form-tips">
-        Your HCU IPv4 address
+        IPv4 address or host name of your HCU, without protocol or port.
+        The default host name is <code>hcu1-XXXX.local</code>, where
+        <code>XXXX</code> are the last four digits of the SGTIN.
     </div>
 
 
