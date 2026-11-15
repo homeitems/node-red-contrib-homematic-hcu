@@ -491,6 +491,30 @@ module.exports = function (RED) {
 
 
         /**
+         * Answers a CONFIG_UPDATE_REQUEST with status APPLIED.
+         * The HCU sends this request when the plugin configuration is
+         * saved in HCUweb. Because the template is empty there is nothing
+         * to apply, but without a response HCUweb keeps waiting. The
+         * response must use the message ID of the request.
+         *
+         * @param {string} messageId
+         */
+        node.sendConfigUpdateApplied = function (messageId) {
+            const response = {
+                id: messageId || crypto.randomUUID(),
+                pluginId: node.pluginId,
+                type: "CONFIG_UPDATE_RESPONSE",
+                body: {
+                    status: "APPLIED"
+                }
+            };
+
+
+            node.sendMessage(response);
+        };
+
+
+        /**
          * Reports an ERROR_RESPONSE from the HCU.
          * The HCU sends this message when it could not process a message
          * from the plugin. It is not correlated with a specific request;
@@ -741,6 +765,21 @@ module.exports = function (RED) {
                             } catch (err) {
                                 node.error(
                                     `Failed to answer CONFIG_TEMPLATE_REQUEST: ${err.message}`
+                                );
+                            }
+                        }
+
+
+                        if (
+                            payload &&
+                            typeof payload === "object" &&
+                            payload.type === "CONFIG_UPDATE_REQUEST"
+                        ) {
+                            try {
+                                node.sendConfigUpdateApplied(payload.id);
+                            } catch (err) {
+                                node.error(
+                                    `Failed to answer CONFIG_UPDATE_REQUEST: ${err.message}`
                                 );
                             }
                         }
