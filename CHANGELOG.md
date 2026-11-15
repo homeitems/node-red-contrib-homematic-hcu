@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ERROR_RESPONSE` messages from the HCU (sent when it cannot process a message) are now reported in the debug sidebar and the Node-RED log, including error code, error text and the original message. Previously they were only visible with an `hcu in` node.
 - `CONFIG_TEMPLATE_REQUEST` messages (sent by the HCU when the plugin settings are opened in HCUweb) are now answered automatically with an empty configuration template, as recommended by the Connect API documentation. Previously the request remained unanswered.
+- `CONFIG_UPDATE_REQUEST` messages (sent by the HCU when **Save** is clicked in the plugin settings in HCUweb) are now answered automatically with status `APPLIED`. Previously HCUweb showed a busy indicator and never finished.
 
 ### Changed
 

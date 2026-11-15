@@ -17,7 +17,7 @@ This is a private Node-RED project that I created in my spare time for non-comme
 - Support for the Homematic IP HCU WebSocket endpoint on port `9001`.
 - Optional support for self-signed TLS certificates.
 - Automatic reconnect after unexpected connection loss.
-- Automatic answer to `PLUGIN_STATE_REQUEST` and `CONFIG_TEMPLATE_REQUEST` messages from the HCU.
+- Automatic answer to `PLUGIN_STATE_REQUEST`, `CONFIG_TEMPLATE_REQUEST` and `CONFIG_UPDATE_REQUEST` messages from the HCU.
 - Initial retrieval and caching of the HCU system state.
 - Device lookup through the Node-RED editor.
 - Reading feature values from the cached system state.
@@ -141,6 +141,7 @@ While connected, the node:
 
 - answers every `PLUGIN_STATE_REQUEST` from the HCU with `READY`.
 - answers every `CONFIG_TEMPLATE_REQUEST` (sent when the plugin settings are opened in HCUweb) with an empty configuration template, as recommended by the Connect API documentation. All settings are made in Node-RED, so HCUweb shows no configuration parameters for the plugin. Sending your own `CONFIG_TEMPLATE_RESPONSE` with `hcu out` is not supported, because the HCU would receive two answers.
+- answers every `CONFIG_UPDATE_REQUEST` (sent when **Save** is clicked in the plugin settings in HCUweb) with a `CONFIG_UPDATE_RESPONSE` with status `APPLIED`. There is nothing to apply, but without this answer HCUweb keeps waiting. Sending your own `CONFIG_UPDATE_RESPONSE` with `hcu out` is not supported.
 - reports every `ERROR_RESPONSE` from the HCU (sent when the HCU cannot process a message) as an error in the debug sidebar and the Node-RED log, including the error code, the error text and the original message (shortened to 1000 characters). The error is not assigned to a specific request.
 - replaces a device in the cache when a `DEVICE_CHANGED` event arrives. Other events (for example `DEVICE_ADDED`, `DEVICE_REMOVED` or `GROUP_CHANGED`) do not update the cache; new or removed devices are reflected after the next reconnect or redeploy.
 - mirrors the cache to the global context key `homematicHcu.systemState` (`{ timestamp, data }`), so it can be read in Function nodes.
@@ -600,6 +601,8 @@ PLUGIN_STATE_REQUEST
 PLUGIN_STATE_RESPONSE
 CONFIG_TEMPLATE_REQUEST
 CONFIG_TEMPLATE_RESPONSE
+CONFIG_UPDATE_REQUEST
+CONFIG_UPDATE_RESPONSE
 CREATE_USER_MESSAGE_REQUEST
 CREATE_USER_MESSAGE_RESPONSE
 DELETE_USER_MESSAGE_REQUEST
